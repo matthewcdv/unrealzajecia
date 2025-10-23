@@ -17,6 +17,7 @@ public class ue5_zajecia : ModuleRules
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
+			"EnhancedInput",
 			"UMG",
 			"Slate"
 		});
