@@ -1,10 +1,19 @@
 // W pliku ABasePlayerCharacter.cpp
 
 #include "ABasePlayerCharacter.h"
-#include "Components/InputComponent.h"                  // Potrzebne do SetupPlayerInputComponent
-#include "EnhancedInputComponent.h"                 // Potrzebne do bindowania Enhanced Input
-#include "EnhancedInputSubsystems.h"                // Potrzebne do pobrania Subsystemu
-#include "GameFramework/PlayerController.h"         // Potrzebne do pobrania PlayerController
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "InputActionValue.h"
+#include "InteractionComponent.h" 
+#include "PickableWeapon.h"
+#include "Components/SkeletalMeshComponent.h"
+
+AABasePlayerCharacter::AABasePlayerCharacter()
+{
+	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
+}
 
 // --- DODAJ TÊ FUNKCJÊ (REJESTRACJA KONTEKSTU) ---
 void AABasePlayerCharacter::BeginPlay()
@@ -46,6 +55,10 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		{
 			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Look);
 		}
+		if (EquipAction)
+		{
+			EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Interact);
+		}
 	}
 }
 
@@ -82,5 +95,37 @@ void AABasePlayerCharacter::Look(const FInputActionValue& Value)
 
 		// Dodaj obrót "Pitch" (góra/dó³) - Oœ Y myszki
 		AddControllerPitchInput(-LookVector.Y);
+	}
+}
+
+void AABasePlayerCharacter::Equip(APickableWeapon* Weapon)
+{
+	if (!Weapon) return;
+
+	CurrentWeapon = Weapon;
+
+	FName SocketName = TEXT("WeaponSocket");
+
+	if (USceneComponent* Grip = Weapon->GetGripPoint())
+	{
+		Grip->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+	}
+	else
+	{
+		Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+	}
+
+	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Weapon->GetRootComponent()))
+	{
+		PrimComp->SetSimulatePhysics(false);
+		PrimComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+}
+void AABasePlayerCharacter::Interact()
+{
+	if (InteractionComponent)
+	{
+		InteractionComponent->TryInteract(this);
 	}
 }

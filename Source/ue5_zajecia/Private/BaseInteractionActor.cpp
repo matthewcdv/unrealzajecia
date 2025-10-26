@@ -25,3 +25,13 @@ void ABaseInteractionActor::Tick(float DeltaTime)
 
 }
 
+void ABaseInteractionActor::Interact(AActor* Interactor)
+{
+	PickUp(Interactor);
+}
+
+void ABaseInteractionActor::PickUp(AActor* Interactor)
+{
+
+}
+

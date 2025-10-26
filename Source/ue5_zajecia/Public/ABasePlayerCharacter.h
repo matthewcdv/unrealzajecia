@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "ABaseCharacter.h"
+#include "InteractionComponent.h"
 #include "InputMappingContext.h"
+#include "PickableWeapon.h"
 #include "ABasePlayerCharacter.generated.h"
 
 /**
@@ -28,6 +30,10 @@ public:
     UInputAction* AttackAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* LookAction;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	APickableWeapon* CurrentWeapon;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	UInteractionComponent* InteractionComponent;
 protected:
 	// --- DODAJ TE FUNKCJE ---
 
@@ -43,5 +49,9 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void Attack();
-	
+
+	void Interact();
+public:
+	virtual void Equip(APickableWeapon* Weapon);
+	AABasePlayerCharacter();
 };

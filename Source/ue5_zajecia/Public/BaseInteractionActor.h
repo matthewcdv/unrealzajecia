@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "InteractionInterface.h"
 #include "BaseInteractionActor.generated.h"
 
 UCLASS()
-class UE5_ZAJECIA_API ABaseInteractionActor : public AActor
+class UE5_ZAJECIA_API ABaseInteractionActor : public AActor, public IInteractionInterface
 {
 	GENERATED_BODY()
 	
@@ -22,5 +23,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void Interact(AActor* Interactor) override;
+
+	virtual void PickUp(AActor* Interactor);
 
 };
