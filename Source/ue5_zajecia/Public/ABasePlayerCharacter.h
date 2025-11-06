@@ -34,6 +34,9 @@ public:
 	APickableWeapon* CurrentWeapon;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	UInteractionComponent* InteractionComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
+	UAnimMontage* AttackMontage;
 protected:
 	// --- DODAJ TE FUNKCJE ---
 
@@ -48,10 +51,10 @@ protected:
 
 	void Look(const FInputActionValue& Value);
 
-	void Attack();
-
 	void Interact();
 public:
 	virtual void Equip(APickableWeapon* Weapon);
 	AABasePlayerCharacter();
+
+	void Attack(const FInputActionValue& Value);
 };
