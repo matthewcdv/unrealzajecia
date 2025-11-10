@@ -17,6 +17,9 @@ class UE5_ZAJECIA_API APickableWeapon : public ABaseInteractionActor
 public:
     APickableWeapon();
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+    float BaseDamage = 25.0f;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* WeaponMesh;
 

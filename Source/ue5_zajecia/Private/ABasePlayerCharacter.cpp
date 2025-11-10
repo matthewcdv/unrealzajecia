@@ -9,6 +9,7 @@
 #include "InteractionComponent.h" 
 #include "PickableWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "CombatInterface.h"
 
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -197,20 +198,19 @@ void AABasePlayerCharacter::PerformAttackTrace()
 {
 	if (!CurrentWeapon || !CurrentWeapon->GetHitbox())
 	{
-		return; // Nie mamy broni albo broñ nie ma hitboxa
+		return;
 	}
 
 	UBoxComponent* Hitbox = CurrentWeapon->GetHitbox();
 
+	// ... (reszta logiki BoxTrace jest poprawna) ...
 	FVector Start = Hitbox->GetComponentLocation();
-	FVector End = Start; // Skanujemy w miejscu, wiêc Start i End s¹ te same
+	FVector End = Start;
 	FVector HalfSize = Hitbox->GetScaledBoxExtent();
 	FRotator Orientation = Hitbox->GetComponentRotation();
-
 	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(this); // Ignoruj sam¹ postaæ
-	ActorsToIgnore.Add(CurrentWeapon); // Ignoruj sam¹ broñ
-
+	ActorsToIgnore.Add(this);
+	ActorsToIgnore.Add(CurrentWeapon);
 	FHitResult HitResult;
 
 	bool bHit = UKismetSystemLibrary::BoxTraceSingle(
@@ -219,32 +219,37 @@ void AABasePlayerCharacter::PerformAttackTrace()
 		End,
 		HalfSize,
 		Orientation,
-		UEngineTypes::ConvertToTraceType(ECC_Visibility), 
+		UEngineTypes::ConvertToTraceType(ECC_Visibility),
 		false,
 		ActorsToIgnore,
 		EDrawDebugTrace::ForDuration,
 		HitResult,
 		true,
-		FLinearColor::Red,     // Kolor gdy nie trafia
-		FLinearColor::Green,   // Kolor gdy trafia
-		0.1f                   // Czas rysowania
+		FLinearColor::Red,
+		FLinearColor::Green,
+		0.1f
 	);
 
 	if (bHit)
 	{
-		// Sprawdzamy, czy ju¿ nie trafiliœmy tego aktora w tym machniêciu
-		if (!HitActors.Contains(HitResult.GetActor()))
+		AActor* HitActor = HitResult.GetActor();
+
+		if (!HitActors.Contains(HitActor))
 		{
-			HitActors.Add(HitResult.GetActor()); // Dodaj do listy trafionych
+			HitActors.Add(HitActor);
 
-			// ZDERZENIE!
 			FVector HitLocation = HitResult.Location;
-			AActor* HitActor = HitResult.GetActor();
-
 			UE_LOG(LogTemp, Warning, TEXT("Trafiono %s w miejscu: %s"), *HitActor->GetName(), *HitLocation.ToString());
 
-			// Tutaj mo¿esz dodaæ logikê zadawania obra¿eñ, np.
-			// UGameplayStatics::ApplyDamage(HitActor, 10.f, GetController(), this, UDamageType::StaticClass());
+
+			if (HitActor->Implements<UCombatInterface>())
+			{
+
+				float DamageToDeal = CurrentWeapon->BaseDamage;
+
+				ICombatInterface::Execute_GetHit(HitActor, this, DamageToDeal);
+
+			}
 		}
 	}
 }
