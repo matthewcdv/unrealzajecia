@@ -38,15 +38,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
 	UAnimMontage* AttackMontage;
 protected:
-	// --- DODAJ TE FUNKCJE ---
 
-	/** Wywo³ywane na pocz¹tku gry */
 	virtual void BeginPlay() override;
 
-	/** Wywo³ywane, by przypisaæ input do funkcji */
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	/** Funkcja, która bêdzie wywo³ywana przez IA_Move */
+
 	void Move(const FInputActionValue& Value);
 
 	void Look(const FInputActionValue& Value);
@@ -57,4 +55,19 @@ public:
 	AABasePlayerCharacter();
 
 	void Attack(const FInputActionValue& Value);
+
+	void StartWeaponTrace();
+	void EndWeaponTrace();
+
+	virtual void Tick(float DeltaTime) override;
+
+protected:
+	void PerformAttackTrace();
+
+
+private:
+	bool bIsAttacking;
+
+	UPROPERTY()
+	TArray<AActor*> HitActors;
 };

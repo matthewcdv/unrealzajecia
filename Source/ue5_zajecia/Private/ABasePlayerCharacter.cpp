@@ -10,12 +10,21 @@
 #include "PickableWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
 
+#include "Components/BoxComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Engine/HitResult.h"
+#include "Engine/EngineTypes.h"
+#include "Math/Quat.h"
+#include "Math/Color.h"
+
 AABasePlayerCharacter::AABasePlayerCharacter()
 {
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
+	PrimaryActorTick.bCanEverTick = true;
+	bIsAttacking = false;
 }
 
-// --- DODAJ TÊ FUNKCJÊ (REJESTRACJA KONTEKSTU) ---
+
 void AABasePlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -26,7 +35,7 @@ void AABasePlayerCharacter::BeginPlay()
 		// Pobierz lokalny subsystem Enhanced Input
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			// Dodaj nasz Mapping Context. Upewnij siê, ¿e zmienna MappingContext nie jest pusta (sprawdzamy, czy przypisa³eœ j¹ w Blueprincie w Kroku 2)
+			
 			if (MappingContext)
 			{
 				Subsystem->AddMappingContext(MappingContext, 0);
@@ -43,11 +52,10 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	// Rzutuj InputComponent na EnhancedInputComponent
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// Zbinduj (po³¹cz) akcjê. 
-		// SprawdŸ czy MoveAction nie jest puste (czy przypisa³eœ w Blueprincie)
+		
 		if (MoveAction)
 		{
-			// Gdy akcja jest "Triggered" (czyli klawisz jest wciœniêty), wywo³aj funkcjê "Move" w tym obiekcie ("this")
+			
 			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Move);
 		}
 
@@ -64,9 +72,24 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Attack);
 		}
 	}
+
+	
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (ULocalPlayer* LP = PC->GetLocalPlayer())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+			{
+				if (MappingContext)
+				{
+					Subsystem->AddMappingContext(MappingContext, 0);
+				}
+			}
+		}
+	}
 }
 
-// --- DODAJ TÊ FUNKCJÊ (LOGIKA RUCHU) ---
+// --- (LOGIKA RUCHU) ---
 void AABasePlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// Pobierz wartoœæ z akcji jako Wektor 2D (dziêki Krok 1)
@@ -104,19 +127,22 @@ void AABasePlayerCharacter::Look(const FInputActionValue& Value)
 
 void AABasePlayerCharacter::Equip(APickableWeapon* Weapon)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Equip wywo³ane!"));
 	if (!Weapon) return;
 
 	CurrentWeapon = Weapon;
 
 	FName SocketName = TEXT("WeaponSocket");
 
-	if (USceneComponent* Grip = Weapon->GetGripPoint())
+	// Podczepiamy bezpoœrednio WeaponMesh do mesh'a postaci
+	if (Weapon->WeaponMesh)
 	{
-		Grip->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+		Weapon->WeaponMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+		UE_LOG(LogTemp, Warning, TEXT("WeaponMesh po podczepieniu: %s"), *Weapon->WeaponMesh->GetComponentLocation().ToString());
 	}
 	else
 	{
-		Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+		UE_LOG(LogTemp, Warning, TEXT("Brak WeaponMesh!"));
 	}
 
 	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Weapon->GetRootComponent()))
@@ -141,5 +167,84 @@ void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 	if (AttackMontage)
 	{
 		PlayAnimMontage(AttackMontage);
+	}
+}
+
+void AABasePlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsAttacking)
+	{
+		PerformAttackTrace();
+	}
+}
+
+
+void AABasePlayerCharacter::StartWeaponTrace()
+{
+	bIsAttacking = true;
+	HitActors.Empty(); 
+}
+
+void AABasePlayerCharacter::EndWeaponTrace()
+{
+	bIsAttacking = false;
+}
+
+
+void AABasePlayerCharacter::PerformAttackTrace()
+{
+	if (!CurrentWeapon || !CurrentWeapon->GetHitbox())
+	{
+		return; // Nie mamy broni albo broñ nie ma hitboxa
+	}
+
+	UBoxComponent* Hitbox = CurrentWeapon->GetHitbox();
+
+	FVector Start = Hitbox->GetComponentLocation();
+	FVector End = Start; // Skanujemy w miejscu, wiêc Start i End s¹ te same
+	FVector HalfSize = Hitbox->GetScaledBoxExtent();
+	FRotator Orientation = Hitbox->GetComponentRotation();
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this); // Ignoruj sam¹ postaæ
+	ActorsToIgnore.Add(CurrentWeapon); // Ignoruj sam¹ broñ
+
+	FHitResult HitResult;
+
+	bool bHit = UKismetSystemLibrary::BoxTraceSingle(
+		GetWorld(),
+		Start,
+		End,
+		HalfSize,
+		Orientation,
+		UEngineTypes::ConvertToTraceType(ECC_Visibility), 
+		false,
+		ActorsToIgnore,
+		EDrawDebugTrace::ForDuration,
+		HitResult,
+		true,
+		FLinearColor::Red,     // Kolor gdy nie trafia
+		FLinearColor::Green,   // Kolor gdy trafia
+		0.1f                   // Czas rysowania
+	);
+
+	if (bHit)
+	{
+		// Sprawdzamy, czy ju¿ nie trafiliœmy tego aktora w tym machniêciu
+		if (!HitActors.Contains(HitResult.GetActor()))
+		{
+			HitActors.Add(HitResult.GetActor()); // Dodaj do listy trafionych
+
+			// ZDERZENIE!
+			FVector HitLocation = HitResult.Location;
+			AActor* HitActor = HitResult.GetActor();
+
+			UE_LOG(LogTemp, Warning, TEXT("Trafiono %s w miejscu: %s"), *HitActor->GetName(), *HitLocation.ToString());
+
+			// Tutaj mo¿esz dodaæ logikê zadawania obra¿eñ, np.
+			// UGameplayStatics::ApplyDamage(HitActor, 10.f, GetController(), this, UDamageType::StaticClass());
+		}
 	}
 }
