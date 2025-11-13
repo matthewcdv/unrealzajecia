@@ -70,4 +70,7 @@ private:
 
 	UPROPERTY()
 	TArray<AActor*> HitActors;
+
+	float AttackCooldown = 0.5f; // czas w sekundach
+	float LastAttackTime = -100.f;
 };

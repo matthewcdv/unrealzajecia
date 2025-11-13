@@ -66,11 +66,11 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		}
 		if (EquipAction)
 		{
-			EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Interact);
+			EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &AABasePlayerCharacter::Interact);
 		}
 		if (AttackAction)
 		{
-			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Attack);
+			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AABasePlayerCharacter::Attack);
 		}
 	}
 
@@ -164,6 +164,30 @@ void AABasePlayerCharacter::Interact()
 
 void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 {
+	// SprawdŸ czy jest broñ
+	if (!CurrentWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Brak broni - atak zablokowany!"));
+		return;
+	}
+
+	// SprawdŸ cooldown
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	if (CurrentTime - LastAttackTime < AttackCooldown)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Atak w cooldownie!"));
+		return;
+	}
+
+	// SprawdŸ czy animacja ataku ju¿ trwa
+	if (GetMesh()->GetAnimInstance() && GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackMontage))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Animacja ataku ju¿ trwa!"));
+		return;
+	}
+
+	LastAttackTime = CurrentTime;
+
 	UE_LOG(LogTemp, Warning, TEXT("Attack triggered!"));
 	if (AttackMontage)
 	{
@@ -203,7 +227,6 @@ void AABasePlayerCharacter::PerformAttackTrace()
 
 	UBoxComponent* Hitbox = CurrentWeapon->GetHitbox();
 
-	// ... (reszta logiki BoxTrace jest poprawna) ...
 	FVector Start = Hitbox->GetComponentLocation();
 	FVector End = Start;
 	FVector HalfSize = Hitbox->GetScaledBoxExtent();
@@ -222,7 +245,7 @@ void AABasePlayerCharacter::PerformAttackTrace()
 		UEngineTypes::ConvertToTraceType(ECC_Visibility),
 		false,
 		ActorsToIgnore,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		HitResult,
 		true,
 		FLinearColor::Red,
@@ -232,6 +255,17 @@ void AABasePlayerCharacter::PerformAttackTrace()
 
 	if (bHit)
 	{
+		// Rysuj debug trace tylko gdy trafisz
+		UKismetSystemLibrary::DrawDebugBox(
+			GetWorld(),
+			HitResult.Location,
+			HalfSize,
+			FLinearColor::Green,
+			Orientation, 
+			0.1f,
+			1.5f
+		);
+
 		AActor* HitActor = HitResult.GetActor();
 
 		if (!HitActors.Contains(HitActor))
