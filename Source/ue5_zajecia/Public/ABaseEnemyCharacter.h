@@ -3,7 +3,9 @@
 #include "CoreMinimal.h"
 #include "ABaseCharacter.h"
 #include "CombatInterface.h"
+#include "Enum/PawnState.h"
 #include "ABaseEnemyCharacter.generated.h"
+
 
 /**
  * 
@@ -29,6 +31,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	USoundBase* HitSound;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	EPawnState CurrentState;
 
 	UFUNCTION()
 	void HandleDeath();

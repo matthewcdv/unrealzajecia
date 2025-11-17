@@ -7,6 +7,7 @@
 AABaseEnemyCharacter::AABaseEnemyCharacter()
 {
 	AttributesComponent = CreateDefaultSubobject<UAttributesComponent>(TEXT("AttributesComponent"));
+	CurrentState = EPawnState::EPS_Idle;
 }
 
 void AABaseEnemyCharacter::BeginPlay()
@@ -21,7 +22,7 @@ void AABaseEnemyCharacter::BeginPlay()
 
 void AABaseEnemyCharacter::GetHit_Implementation(AActor* Attacker, float Damage)
 {
-	if (AttributesComponent->GetHealth() <= 0.f)
+	if (CurrentState == EPawnState::EPS_Dead || CurrentState == EPawnState::EPS_Hit)
 	{
 		return;
 	}
@@ -30,7 +31,8 @@ void AABaseEnemyCharacter::GetHit_Implementation(AActor* Attacker, float Damage)
 
 	if (AttributesComponent->GetHealth() > 0.f)
 	{
-		// Odtwórz dŸwiêk i animacjê
+		CurrentState = EPawnState::EPS_Hit;
+
 		if (HitSound)
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
@@ -42,14 +44,13 @@ void AABaseEnemyCharacter::GetHit_Implementation(AActor* Attacker, float Damage)
 	}
 }
 
-// <<< 5. IMPLEMENTACJA ŒMIERCI
 void AABaseEnemyCharacter::HandleDeath()
 {
 	UE_LOG(LogTemp, Warning, TEXT("%s zginal!"), *GetName());
+	CurrentState = EPawnState::EPS_Dead;
 
 	GetCharacterMovement()->StopMovementImmediately();
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	// W³¹cz fizykê (ragdoll)
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 }
