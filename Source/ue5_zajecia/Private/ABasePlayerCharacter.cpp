@@ -1,6 +1,3 @@
-// W pliku ABasePlayerCharacter.cpp
-
-
 #include "InteractionComponent.h"
 #include "InputMappingContext.h"
 #include "PickableWeapon.h"
@@ -32,10 +29,8 @@ void AABasePlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Upewnij siê, ¿e mamy valid PlayerController
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
-		// Pobierz lokalny subsystem Enhanced Input
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			
@@ -47,12 +42,10 @@ void AABasePlayerCharacter::BeginPlay()
 	}
 }
 
-// --- DODAJ TÊ FUNKCJÊ (BINDOWANIE AKCJI) ---
 void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Rzutuj InputComponent na EnhancedInputComponent
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		
@@ -92,38 +85,27 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	}
 }
 
-// --- (LOGIKA RUCHU) ---
 void AABasePlayerCharacter::Move(const FInputActionValue& Value)
 {
-	// Pobierz wartoœæ z akcji jako Wektor 2D (dziêki Krok 1)
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 
-	// Upewnij siê, ¿e postaæ ma kontroler
 	if (Controller != nullptr)
 	{
-		// Pobierz wektor "do przodu" postaci
 		const FVector ForwardDirection = GetActorForwardVector();
-		// Pobierz wektor "w prawo" postaci
 		const FVector RightDirection = GetActorRightVector();
 
-		// Dodaj ruch do przodu/ty³u (oœ Y z wektora 2D)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
-		// Dodaj ruch w lewo/prawo (oœ X z wektora 2D)
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
 
 void AABasePlayerCharacter::Look(const FInputActionValue& Value)
 {
-	// Pobierz wartoœæ z akcji jako Wektor 2D
 	const FVector2D LookVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
-		// Dodaj obrót "Yaw" (lewo/prawo) - Oœ X myszki
 		AddControllerYawInput(LookVector.X);
-
-		// Dodaj obrót "Pitch" (góra/dó³) - Oœ Y myszki
 		AddControllerPitchInput(-LookVector.Y);
 	}
 }
@@ -137,7 +119,6 @@ void AABasePlayerCharacter::Equip(APickableWeapon* Weapon)
 
 	FName SocketName = TEXT("WeaponSocket");
 
-	// Podczepiamy bezpoœrednio WeaponMesh do mesh'a postaci
 	if (Weapon->WeaponMesh)
 	{
 		Weapon->WeaponMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
@@ -166,14 +147,12 @@ void AABasePlayerCharacter::Interact()
 
 void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 {
-	// SprawdŸ czy jest broñ
 	if (!CurrentWeapon)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Brak broni - atak zablokowany!"));
 		return;
 	}
 
-	// SprawdŸ cooldown
 	float CurrentTime = GetWorld()->GetTimeSeconds();
 	if (CurrentTime - LastAttackTime < AttackCooldown)
 	{
@@ -181,7 +160,6 @@ void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 		return;
 	}
 
-	// SprawdŸ czy animacja ataku ju¿ trwa
 	if (GetMesh()->GetAnimInstance() && GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackMontage))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Animacja ataku ju¿ trwa!"));
@@ -257,7 +235,6 @@ void AABasePlayerCharacter::PerformAttackTrace()
 
 	if (bHit)
 	{
-		// Rysuj debug trace tylko gdy trafisz
 		UKismetSystemLibrary::DrawDebugBox(
 			GetWorld(),
 			HitResult.Location,

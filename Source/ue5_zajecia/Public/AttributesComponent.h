@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -32,7 +30,6 @@ public:
 	void SetHealth(float NewHealth);
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 	float MaxHealth = 100.0f;
@@ -40,10 +37,5 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Attributes")
 	float Health;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		
+	
 };

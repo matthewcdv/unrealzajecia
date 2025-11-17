@@ -12,8 +12,6 @@ class UE5_ZAJECIA_API UInteractionComponent : public USceneComponent
 
 public:	
 	UInteractionComponent();
-protected:
-	virtual void BeginPlay() override;
 public:
 	void TryInteract(AActor* Interactor);
 };

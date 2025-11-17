@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "InteractionComponent.h"
 #include "InteractionInterface.h"
 #include "DrawDebugHelpers.h"
@@ -10,13 +7,6 @@ UInteractionComponent::UInteractionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
-
-
-void UInteractionComponent::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 
 void UInteractionComponent::TryInteract(AActor* Interactor)
 {
