@@ -4,16 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "ABaseCharacter.h"
-#include "InteractionComponent.h"
-#include "InputMappingContext.h"
-#include "PickableWeapon.h"
 #include "ABasePlayerCharacter.generated.h"
 
 /**
  * 
  */
-class InputMappingContext;
+class UInputMappingContext;
 class UInputAction;
+class UInteractionComponent;
+class UAnimMontage;
+class APickableWeapon;
+struct FInputActionValue;
+
 UCLASS()
 class UE5_ZAJECIA_API AABasePlayerCharacter : public AABaseCharacter
 {
