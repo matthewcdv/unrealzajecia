@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "CombatInterface.h"
+#include "AttributesComponent.h"
 
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -20,6 +21,7 @@
 AABasePlayerCharacter::AABasePlayerCharacter()
 {
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
+	AttributesComponent = CreateDefaultSubobject<UAttributesComponent>(TEXT("AttributesComponent"));
 	PrimaryActorTick.bCanEverTick = true;
 	bIsAttacking = false;
 }
@@ -112,7 +114,6 @@ void AABasePlayerCharacter::Look(const FInputActionValue& Value)
 
 void AABasePlayerCharacter::Equip(APickableWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Equip wywo³ane!"));
 	if (!Weapon) return;
 
 	CurrentWeapon = Weapon;
@@ -149,21 +150,34 @@ void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 {
 	if (!CurrentWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Brak broni - atak zablokowany!"));
 		return;
+	}
+
+	if (AttributesComponent)
+	{
+		float AttackCost = AttributesComponent->StaminaCosts.StaminaCost_Attack;
+
+		if (!AttributesComponent->CanPayStaminaCost(AttackCost))
+		{
+			return;
+		}
 	}
 
 	float CurrentTime = GetWorld()->GetTimeSeconds();
 	if (CurrentTime - LastAttackTime < AttackCooldown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Atak w cooldownie!"));
 		return;
 	}
 
 	if (GetMesh()->GetAnimInstance() && GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackMontage))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Animacja ataku ju¿ trwa!"));
 		return;
+	}
+
+	if (AttributesComponent)
+	{
+		float AttackCost = AttributesComponent->StaminaCosts.StaminaCost_Attack;
+		AttributesComponent->PayStaminaCost(AttackCost);
 	}
 
 	LastAttackTime = CurrentTime;

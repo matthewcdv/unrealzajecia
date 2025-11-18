@@ -37,6 +37,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
 	UAnimMontage* AttackMontage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UAttributesComponent* AttributesComponent;
 protected:
 
 	virtual void BeginPlay() override;

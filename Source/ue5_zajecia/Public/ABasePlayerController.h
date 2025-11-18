@@ -13,5 +13,15 @@ UCLASS()
 class UE5_ZAJECIA_API AABasePlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<class UUserWidget> HUDClass;
+
+	UPROPERTY()
+	class UUserWidget* HUDInstance;
 };

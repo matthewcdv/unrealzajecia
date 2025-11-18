@@ -10,5 +10,6 @@ enum class EPawnState : uint8
     EPS_InCombat    UMETA(DisplayName = "In Combat"),
     EPS_Occupied    UMETA(DisplayName = "Occupied (Attacking)"),
     EPS_Hit         UMETA(DisplayName = "Hit Reaction"),
-    EPS_Dead		UMETA(DisplayName = "Dead")
+    EPS_Dead		UMETA(DisplayName = "Dead"),
+    EPS_Exhausted	UMETA(DisplayName = "Exhausted"),
 };
