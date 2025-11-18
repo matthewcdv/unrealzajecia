@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Enum/PawnState.h"
 #include "MainHUD.generated.h"
 
 class UProgressBar;
 class UAttributesComponent;
+class UTextBlock;
 
 UCLASS()
 class UE5_ZAJECIA_API UMainHUD : public UUserWidget
@@ -22,6 +24,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* StaminaBar;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* StateText;
+
 protected:
 	virtual void NativeConstruct() override;
 
@@ -30,4 +35,7 @@ protected:
 
 	UFUNCTION()
 	void UpdateStamina(float CurrentStamina, float MaxStamina);
+
+	UFUNCTION()
+	void UpdateStateText(EPawnState NewState);
 };

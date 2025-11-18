@@ -89,6 +89,13 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 
 void AABasePlayerCharacter::Move(const FInputActionValue& Value)
 {
+
+	if (CurrentState == EPawnState::EPS_Occupied ||
+		CurrentState == EPawnState::EPS_Hit ||
+		CurrentState == EPawnState::EPS_Dead)
+	{
+		return;
+	}
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -148,6 +155,10 @@ void AABasePlayerCharacter::Interact()
 
 void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 {
+	if (CurrentState == EPawnState::EPS_Exhausted || CurrentState == EPawnState::EPS_Occupied)
+	{
+		return;
+	}
 	if (!CurrentWeapon)
 	{
 		return;
@@ -185,7 +196,17 @@ void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 	UE_LOG(LogTemp, Warning, TEXT("Attack triggered!"));
 	if (AttackMontage)
 	{
+		SetCurrentState(EPawnState::EPS_Occupied);
 		PlayAnimMontage(AttackMontage);
+
+		float MontageDuration = AttackMontage->GetPlayLength();
+		GetWorld()->GetTimerManager().SetTimer(
+			AttackTimerHandle,
+			this,
+			&AABasePlayerCharacter::FinishAttack,
+			MontageDuration,
+			false
+		);
 	}
 }
 
@@ -196,6 +217,30 @@ void AABasePlayerCharacter::Tick(float DeltaTime)
 	if (bIsAttacking)
 	{
 		PerformAttackTrace();
+	}
+
+	if (AttributesComponent)
+	{
+		float CurrentStamina = AttributesComponent->GetStamina();
+
+		if (CurrentStamina <= 0.0f && CurrentState != EPawnState::EPS_Exhausted)
+		{
+			SetCurrentState(EPawnState::EPS_Exhausted);
+
+			GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+			UE_LOG(LogTemp, Warning, TEXT("Jestem wyczerpany!"));
+		}
+
+		if (CurrentState == EPawnState::EPS_Exhausted)
+		{
+			if (CurrentStamina >= StaminaThreshold)
+			{
+				SetCurrentState(EPawnState::EPS_Idle);
+
+				GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+				UE_LOG(LogTemp, Warning, TEXT("Odzyskalem sily!"));
+			}
+		}
 	}
 }
 
@@ -279,4 +324,22 @@ void AABasePlayerCharacter::PerformAttackTrace()
 			}
 		}
 	}
+}
+
+void AABasePlayerCharacter::SetCurrentState(EPawnState NewState)
+{
+	if (CurrentState != NewState)
+	{
+		CurrentState = NewState;
+		OnStateChanged.Broadcast(CurrentState);
+	}
+}
+
+void AABasePlayerCharacter::FinishAttack()
+{
+	GetWorld()->GetTimerManager().ClearTimer(AttackTimerHandle);
+
+	SetCurrentState(EPawnState::EPS_Idle);
+
+	HitActors.Empty();
 }

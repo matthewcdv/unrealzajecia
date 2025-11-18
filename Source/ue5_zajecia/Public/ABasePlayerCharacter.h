@@ -2,11 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "ABaseCharacter.h"
+#include "Enum/PawnState.h"
 #include "ABasePlayerCharacter.generated.h"
 
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPawnStateChanged, EPawnState, NewState);
 class UInputMappingContext;
 class UInputAction;
 class UInteractionComponent;
@@ -20,6 +22,11 @@ class UE5_ZAJECIA_API AABasePlayerCharacter : public AABaseCharacter
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnPawnStateChanged OnStateChanged;
+
+	void SetCurrentState(EPawnState NewState);
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
     UInputMappingContext* MappingContext;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
@@ -44,6 +51,8 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	FTimerHandle AttackTimerHandle;
+
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -53,6 +62,12 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void Interact();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	EPawnState CurrentState = EPawnState::EPS_Idle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
+	float StaminaThreshold = 20.0f;
 public:
 	virtual void Equip(APickableWeapon* Weapon);
 	AABasePlayerCharacter();
@@ -61,8 +76,12 @@ public:
 
 	void StartWeaponTrace();
 	void EndWeaponTrace();
+	void FinishAttack();
 
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable, Category = "State")
+	EPawnState GetCurrentState() const { return CurrentState; }
 
 protected:
 	void PerformAttackTrace();
