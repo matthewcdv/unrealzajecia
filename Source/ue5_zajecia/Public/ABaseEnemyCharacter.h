@@ -7,6 +7,7 @@
 #include "Perception/PawnSensingComponent.h"
 #include "ABaseEnemyCharacter.generated.h"
 
+class APickableWeapon;
 
 /**
  * 
@@ -45,6 +46,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	AActor* CombatTarget;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Combat")
+	APickableWeapon* EquippedWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<APickableWeapon> DefaultWeaponClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	FName WeaponSocketName = TEXT("WeaponSocket");
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float AttackRange = 150.0f;

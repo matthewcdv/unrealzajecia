@@ -1,4 +1,5 @@
 #include "ABaseEnemyCharacter.h"
+#include "PickableWeapon.h"
 #include "AttributesComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -27,6 +28,24 @@ void AABaseEnemyCharacter::BeginPlay()
 	if (PawnSensingComp)
 	{
 		PawnSensingComp->OnSeePawn.AddDynamic(this, &AABaseEnemyCharacter::OnSeePawn);
+	}
+
+	if (DefaultWeaponClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+
+		APickableWeapon* SpawnedWeapon = GetWorld()->SpawnActor<APickableWeapon>(DefaultWeaponClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+
+		if (SpawnedWeapon)
+		{
+			EquippedWeapon = SpawnedWeapon;
+
+			EquippedWeapon->GetRootComponent()->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+
+			EquippedWeapon->SetActorEnableCollision(false);
+		}
 	}
 }
 
