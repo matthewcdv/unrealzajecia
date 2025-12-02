@@ -4,14 +4,11 @@
 #include "ABaseCharacter.h"
 #include "CombatInterface.h"
 #include "Enum/PawnState.h"
-#include "Perception/PawnSensingComponent.h"
+// USUNIÊTO: #include "Perception/PawnSensingComponent.h" (Ju¿ niepotrzebne)
 #include "ABaseEnemyCharacter.generated.h"
 
 class APickableWeapon;
 
-/**
- * 
- */
 UCLASS()
 class UE5_ZAJECIA_API AABaseEnemyCharacter : public AABaseCharacter, public ICombatInterface
 {
@@ -20,7 +17,17 @@ class UE5_ZAJECIA_API AABaseEnemyCharacter : public AABaseCharacter, public ICom
 public:
 	AABaseEnemyCharacter();
 
+	// Interfejs Combat
 	virtual void GetHit_Implementation(AActor* Attacker, float Damage) override;
+
+	// === PRZYWRACAMY TE FUNKCJE (Dla AnimNotify) ===
+	virtual void StartWeaponTrace_Implementation() override;
+	virtual void StopWeaponTrace_Implementation() override;
+
+	// === FUNKCJA ATAKU (PUBLICZNA DLA AI) ===
+	// Zmieniliœmy nazwê na Attack, ¿eby pasowa³a do BTTask, i przenieœliœmy do public
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void Attack();
 
 protected:
 	virtual void BeginPlay() override;
@@ -38,14 +45,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	EPawnState CurrentState;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UPawnSensingComponent* PawnSensingComp;
+	// USUNIÊTO: UPawnSensingComponent* PawnSensingComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	UAnimMontage* AttackMontage;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	AActor* CombatTarget;
+	// USUNIÊTO: AActor* CombatTarget; (To teraz bêdzie w Blackboardzie)
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Combat")
 	APickableWeapon* EquippedWeapon;
@@ -56,18 +61,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	FName WeaponSocketName = TEXT("WeaponSocket");
 
-	UPROPERTY(EditAnywhere, Category = "AI")
-	float AttackRange = 150.0f;
+	// USUNIÊTO: float AttackRange; (To teraz bêdzie w Behavior Tree)
 
-	UFUNCTION()
-	void OnSeePawn(APawn* Pawn);
+	// USUNIÊTO: void OnSeePawn(APawn* Pawn);
 
-	void PerformAttack();
-
+	// Funkcje pomocnicze
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 	UFUNCTION()
 	void HandleDeath();
 
+	// === PRZYWRACAMY LOGIKÊ UDERZENIA ===
+	void PerformAttackTrace();
 
+	bool bIsAttacking = false;
+
+	UPROPERTY()
+	TArray<AActor*> HitActors;
 };

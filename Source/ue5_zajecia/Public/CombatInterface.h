@@ -17,4 +17,10 @@ class UE5_ZAJECIA_API ICombatInterface
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
 	void GetHit(AActor* Attacker, float Damage);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	void StartWeaponTrace();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	void StopWeaponTrace();
 };
