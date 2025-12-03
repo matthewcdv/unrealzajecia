@@ -42,23 +42,24 @@ void AEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus St
 	AABasePlayerCharacter* Player = Cast<AABasePlayerCharacter>(Actor);
 	if (!Player || !Blackboard) return;
 
+	// Jeœli WIDZI gracza
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		// === GRACZ ZAUWA¯ONY (Zadanie 5, p. 44) ===
-		Blackboard->SetValueAsObject(TEXT("TargetActor"), Actor); // Ustaw cel
-		// Tu mo¿esz dodaæ kod do zmiany PawnState na InCombat w Pawn
-		// (póŸniej wywo³asz funkcjê w ABaseEnemyCharacter)
+		// Ustaw gracza jako cel
+		Blackboard->SetValueAsObject(TEXT("TargetActor"), Player);
 	}
-	else if (Blackboard->GetValueAsObject(TEXT("TargetActor")) == Actor)
+	// Jeœli PRZESTA£ WIDZIEÆ gracza (ale to by³ nasz cel)
+	else
 	{
-		// === GRACZ ZGUBIONY (Zadanie 5, p. 45) ===
-		LastKnownTarget = Actor; // Zapamiêtaj gracza
+		// SprawdŸ, czy to, co zniknê³o, to by³ nasz aktualny cel
+		if (Blackboard->GetValueAsObject(TEXT("TargetActor")) == Player)
+		{
+			// 1. Zapamiêtaj ostatni¹ pozycjê gracza (Zadanie 5, p. 45)
+			Blackboard->SetValueAsVector(TEXT("LastKnownPlayerLocation"), Player->GetActorLocation());
 
-		// Zapisz ostatni¹ znan¹ pozycjê
-		Blackboard->SetValueAsVector(TEXT("LastKnownPlayerLocation"), Actor->GetActorLocation());
-
-		// Wyczyœæ cel
-		Blackboard->ClearValue(TEXT("TargetActor"));
+			// 2. Zapomnij gracza jako cel (¿eby przesta³ go goniæ w trybie Combat)
+			Blackboard->ClearValue(TEXT("TargetActor"));
+		}
 	}
 }
 
