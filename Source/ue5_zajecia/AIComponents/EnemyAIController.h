@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -24,23 +22,20 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void OnPossess(APawn* InPawn) override; // U¿ywany do uruchomienia BT
+	virtual void OnPossess(APawn* InPawn) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI")
-	UBehaviorTree* BehaviorTree; // Referencja do assetu BT
+	UBehaviorTree* BehaviorTree;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	UAIPerceptionComponent* AIPerceptionComponent;
 
-	// Funkcja wywo³ywana przez AIPerceptionComponent (Zadanie 5, p. 2)
 	UFUNCTION()
 	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
-	// Funkcja do obs³ugi œmierci (Zadanie 5, p. 135)
 	UFUNCTION()
 	void OnOwnerDeath();
 
 private:
-	// Pomocnicza zmienna dla Perception
 	AActor* LastKnownTarget = nullptr;
 };

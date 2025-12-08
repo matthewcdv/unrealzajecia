@@ -15,7 +15,6 @@ EBTNodeResult::Type UBTTask_ClearValue::ExecuteTask(UBehaviorTreeComponent& Owne
 
 	if (BlackboardComp)
 	{
-		// Czyœci wartoœæ klucza, który wybierzesz w edytorze
 		BlackboardComp->ClearValue(BlackboardKey.SelectedKeyName);
 		return EBTNodeResult::Succeeded;
 	}

@@ -45,9 +45,7 @@ protected:
 	void UpdateStateText(EPawnState NewState);
 
 private:
-	// === 2. TIMER DO UKRYWANIA ===
 	FTimerHandle HideEnemyBarTimer;
 
-	// Funkcja pomocnicza do ukrycia paska
 	void HideEnemyHealth();
 };

@@ -4,7 +4,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
-#include "Kismet/KismetSystemLibrary.h" // Potrzebne do BoxTrace
+#include "Kismet/KismetSystemLibrary.h"
 #include "Components/BoxComponent.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -15,7 +15,6 @@ AABaseEnemyCharacter::AABaseEnemyCharacter()
 	AttributesComponent = CreateDefaultSubobject<UAttributesComponent>(TEXT("AttributesComponent"));
 	CurrentState = EPawnState::EPS_Idle;
 
-	// USUNIÊTO: PawnSensingComp = ... (AIController teraz ma AIPerception)
 }
 
 void AABaseEnemyCharacter::BeginPlay()
@@ -27,7 +26,6 @@ void AABaseEnemyCharacter::BeginPlay()
 		AttributesComponent->OnDeath.AddDynamic(this, &AABaseEnemyCharacter::HandleDeath);
 	}
 
-	// USUNIÊTO: PawnSensingComp->OnSeePawn...
 
 	if (DefaultWeaponClass)
 	{
@@ -50,17 +48,14 @@ void AABaseEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// USUNIÊTO: Ca³¹ logikê chodzenia do gracza i atakowania.
-	// Teraz robi to Behavior Tree!
 
-	// Ale musimy zostawiæ logikê BoxTrace (¿eby ciosy rani³y)
 	if (bIsAttacking)
 	{
 		PerformAttackTrace();
 	}
 }
 
-// Funkcja wywo³ywana przez BTTask_Attack
+
 void AABaseEnemyCharacter::Attack()
 {
 	if (CurrentState == EPawnState::EPS_Occupied || CurrentState == EPawnState::EPS_Dead) return;
@@ -79,11 +74,8 @@ void AABaseEnemyCharacter::Attack()
 
 void AABaseEnemyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	// Po ataku wracamy do InCombat (¿eby AI mog³o dalej decydowaæ)
 	CurrentState = EPawnState::EPS_InCombat;
 }
-
-// === PRZYWRÓCONE FUNKCJE DO ZADAWANIA OBRA¯EÑ ===
 
 void AABaseEnemyCharacter::StartWeaponTrace_Implementation()
 {
@@ -113,7 +105,7 @@ void AABaseEnemyCharacter::PerformAttackTrace()
 	bool bHit = UKismetSystemLibrary::BoxTraceSingle(
 		GetWorld(), Start, End, HalfSize, Orientation,
 		UEngineTypes::ConvertToTraceType(ECC_Visibility),
-		false, ActorsToIgnore, EDrawDebugTrace::ForDuration, // Debug w³¹czony
+		false, ActorsToIgnore, EDrawDebugTrace::ForDuration,
 		HitResult, true, FLinearColor::Red, FLinearColor::Green, 0.1f
 	);
 
@@ -130,7 +122,6 @@ void AABaseEnemyCharacter::PerformAttackTrace()
 		}
 	}
 }
-// ===============================================
 
 void AABaseEnemyCharacter::GetHit_Implementation(AActor* Attacker, float Damage)
 {
