@@ -27,6 +27,11 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* StateText;
 
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* EnemyHealthBar;
+
+	void UpdateEnemyHealth(float CurrentHealth, float MaxHealth);
+
 protected:
 	virtual void NativeConstruct() override;
 
@@ -38,4 +43,11 @@ protected:
 
 	UFUNCTION()
 	void UpdateStateText(EPawnState NewState);
+
+private:
+	// === 2. TIMER DO UKRYWANIA ===
+	FTimerHandle HideEnemyBarTimer;
+
+	// Funkcja pomocnicza do ukrycia paska
+	void HideEnemyHealth();
 };

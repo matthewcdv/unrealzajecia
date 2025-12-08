@@ -1,4 +1,7 @@
 #include "ABasePlayerCharacter.h"
+#include "Widget/MainHUD.h"
+#include "ABaseEnemyCharacter.h"
+#include "ABasePlayerController.h"
 #include "InteractionComponent.h"
 #include "InputMappingContext.h"
 #include "PickableWeapon.h"
@@ -294,14 +297,9 @@ void AABasePlayerCharacter::PerformAttackTrace()
 
 	if (bHit)
 	{
+		// Debug box (opcjonalnie)
 		UKismetSystemLibrary::DrawDebugBox(
-			GetWorld(),
-			HitResult.Location,
-			HalfSize,
-			FLinearColor::Green,
-			Orientation, 
-			0.1f,
-			1.5f
+			GetWorld(), HitResult.Location, HalfSize, FLinearColor::Green, Orientation, 0.1f, 1.5f
 		);
 
 		AActor* HitActor = HitResult.GetActor();
@@ -313,14 +311,33 @@ void AABasePlayerCharacter::PerformAttackTrace()
 			FVector HitLocation = HitResult.Location;
 			UE_LOG(LogTemp, Warning, TEXT("Trafiono %s w miejscu: %s"), *HitActor->GetName(), *HitLocation.ToString());
 
-
 			if (HitActor->Implements<UCombatInterface>())
 			{
-
 				float DamageToDeal = CurrentWeapon->BaseDamage;
-
 				ICombatInterface::Execute_GetHit(HitActor, this, DamageToDeal);
 
+				// === NOWA CZÊŒÆ: AKTUALIZACJA HUD (Zadanie 5) ===
+
+				// 1. Rzutujemy trafionego aktora na Wroga
+				if (AABaseEnemyCharacter* Enemy = Cast<AABaseEnemyCharacter>(HitActor))
+				{
+					// 2. Pobieramy jego komponent atrybutów 
+					// (Jeœli ta linijka œwieci na czerwono, upewnij siê, ¿e AttributesComponent 
+					// jest w sekcji 'public' w ABaseEnemyCharacter.h lub u¿yj gettera)
+					if (UAttributesComponent* EnemyAttributes = Enemy->AttributesComponent)
+					{
+						// 3. Pobieramy nasz Kontroler
+						if (AABasePlayerController* PC = Cast<AABasePlayerController>(GetController()))
+						{
+							// 4. Pobieramy HUD i wysy³amy dane
+							if (UMainHUD* HUD = Cast<UMainHUD>(PC->HUDInstance))
+							{
+								HUD->UpdateEnemyHealth(EnemyAttributes->GetHealth(), EnemyAttributes->GetMaxHealth());
+							}
+						}
+					}
+				}
+				// ===============================================
 			}
 		}
 	}

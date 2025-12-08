@@ -11,7 +11,11 @@ void UMainHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// ZnajdŸ gracza i jego komponent
+    if (EnemyHealthBar)
+    {
+        EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
+    }
+
 	if (APawn* OwningPawn = GetOwningPlayerPawn())
 	{
 		if (AABasePlayerCharacter* PlayerChar = Cast<AABasePlayerCharacter>(OwningPawn))
@@ -83,4 +87,38 @@ void UMainHUD::UpdateStateText(EPawnState NewState)
     }
 
     StateText->SetText(FText::FromString(StateString));
+}
+
+void UMainHUD::UpdateEnemyHealth(float CurrentHealth, float MaxHealth)
+{
+	if (EnemyHealthBar)
+	{
+		if (MaxHealth > 0.0f)
+		{
+			float Percent = CurrentHealth / MaxHealth;
+			EnemyHealthBar->SetPercent(Percent);
+		}
+
+		EnemyHealthBar->SetVisibility(ESlateVisibility::Visible);
+
+		if (GetWorld())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(HideEnemyBarTimer);
+			GetWorld()->GetTimerManager().SetTimer(
+				HideEnemyBarTimer,
+				this,
+				&UMainHUD::HideEnemyHealth,
+				3.0f,
+				false
+			);
+		}
+	}
+}
+
+void UMainHUD::HideEnemyHealth()
+{
+	if (EnemyHealthBar)
+	{
+		EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
+	}
 }

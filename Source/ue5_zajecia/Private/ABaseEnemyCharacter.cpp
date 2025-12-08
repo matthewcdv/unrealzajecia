@@ -6,6 +6,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h" // Potrzebne do BoxTrace
 #include "Components/BoxComponent.h"
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 AABaseEnemyCharacter::AABaseEnemyCharacter()
 {
@@ -161,16 +163,28 @@ void AABaseEnemyCharacter::GetHit_Implementation(AActor* Attacker, float Damage)
 
 void AABaseEnemyCharacter::HandleDeath()
 {
-	// Tutaj Twoja logika œmierci (ragdoll itp.)
 	UE_LOG(LogTemp, Warning, TEXT("%s zginal!"), *GetName());
 	CurrentState = EPawnState::EPS_Dead;
 
-	SetActorTickEnabled(false);
-	GetCharacterMovement()->StopMovementImmediately();
-	GetCharacterMovement()->DisableMovement(); // Wa¿ne dla AI, ¿eby przesta³o próbowaæ chodziæ
+	if (AAIController* AIController = Cast<AAIController>(GetController()))
+	{
+		AIController->StopMovement();
 
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		if (UBlackboardComponent* BB = AIController->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(TEXT("IsDead"), true);
+		}
+	}
+
+	//SetActorTickEnabled(false);
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+
+	if (DeathMontage)
+	{
+		PlayAnimMontage(DeathMontage);
+	}
+
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	SetLifeSpan(5.0f);
